@@ -1,0 +1,505 @@
+<!-- Save as index.html -->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Deadbeat Credit Card Spending Tracker</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+
+    body {
+      font-family: 'Poppins', sans-serif;
+      background-color: #000000;
+      color: #ff4c4c;
+      margin: 0;
+      padding: 2rem 1rem;
+      min-height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: flex-start;
+    }
+
+    body.light-theme {
+      background-color: #f8f8f8;
+      color: #333;
+    }
+
+    .container {
+      background: #100000;
+      width: 95%;
+      max-width: 800px;
+      border-radius: 14px;
+      padding: 2rem 2.5rem 3rem;
+      box-shadow: 0 0 30px #ff0000cc;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      position: relative;
+    }
+
+    body.light-theme .container {
+      background: #fff;
+      box-shadow: 0 0 20px rgba(0,0,0,0.1);
+    }
+
+    h1 {
+      font-weight: 700;
+      font-size: 2.5rem;
+      text-align: center;
+      letter-spacing: 2px;
+      user-select: none;
+      margin-bottom: 1rem;
+      color: inherit;
+    }
+
+    .summary {
+      position: sticky;
+      top: 0;
+      background: #330000;
+      color: #fff;
+      padding: 1.2rem 2rem;
+      font-size: 1.4rem;
+      font-weight: 600;
+      text-align: center;
+      border-radius: 10px;
+      box-shadow: 0 0 10px #ff1a1acc;
+      z-index: 100;
+    }
+
+    body.light-theme .summary {
+      background: #e2e2e2;
+      color: #000;
+      box-shadow: none;
+    }
+
+    form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
+      gap: 1rem;
+    }
+
+    form input, form textarea, form select {
+      background: #330000;
+      border: none;
+      border-radius: 12px;
+      padding: 1rem;
+      font-size: 1rem;
+      color: #ff8080;
+      font-weight: 600;
+      width: 100%;
+      box-sizing: border-box;
+    }
+
+    body.light-theme form input,
+    body.light-theme form textarea,
+    body.light-theme form select {
+      background: #f9f9f9;
+      color: #333;
+    }
+
+    form button.submit-btn {
+      grid-column: 1 / -1;
+      background-color: #ff1a1a;
+      color: white;
+      border: none;
+      border-radius: 14px;
+      padding: 0.5rem 0; /* Smaller button */
+      font-weight: 700;
+      font-size: 1rem; /* Smaller font size */
+      cursor: pointer;
+    }
+
+    #resetBtn {
+      background: #330000;
+      color: #ff1a1a;
+      padding: 0.8rem 2rem;
+      font-size: 1rem;
+      font-weight: bold;
+      border-radius: 12px;
+      border: none;
+      cursor: pointer;
+      align-self: center;
+    }
+
+    body.light-theme #resetBtn {
+      background: #f0f0f0;
+      color: #cc0000;
+    }
+
+    #themeToggleBtn {
+      position: absolute;
+      top: 1rem;
+      right: 1rem;
+      background: transparent;
+      border: none;
+      font-size: 1.3rem;
+      cursor: pointer;
+      color: inherit;
+    }
+
+    .entry {
+      background: #440000;
+      padding: 1rem;
+      margin-bottom: 1rem;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+    }
+
+    .entry.removed {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+
+    body.light-theme .entry {
+      background: #f2f2f2;
+      color: #000;
+    }
+
+    /* Toast */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #ff1a1a;
+      color: white;
+      padding: 0.8rem 1.5rem;
+      border-radius: 10px;
+      display: none;
+      z-index: 999;
+      font-weight: 600;
+    }
+
+    /* Card Name List */
+    .card-name-list {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+
+    .card-name-list li {
+      padding: 0.5rem;
+      border-bottom: 1px solid #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .card-name-list li:last-child {
+      border-bottom: none;
+    }
+
+    .card-name-list li button {
+      background: transparent;
+      border: none;
+      padding: 0.2rem 0.5rem;
+      font-size: 1rem;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <button id="themeToggleBtn">🌙 Toggle Theme</button>
+    <h1>Deadbeat Credit Card Spending Tracker</h1>
+    <div class="summary" id="overallTotal">Overall Total Spending: $0.00</div>
+
+    <form id="entryForm" autocomplete="off">
+      <select id="cardName" required>
+        <option value="" disabled selected>Select Credit Card Name</option>
+      </select>
+      <input type="number" id="amount" placeholder="Amount ($)" required min="0.01" step="0.01" />
+      <input type="date" id="spendingDate" placeholder="Date of Spending" required />
+      <textarea id="description" placeholder="Spending Description (optional)" maxlength="200"></textarea>
+      <button type="submit" class="submit-btn">Add Spending</button>
+    </form>
+
+    <h2>Add New Credit Card Name</h2>
+    <input type="text" id="newCardName" placeholder="New Credit Card Name" />
+    <button id="addCardNameBtn" class="submit-btn">Add Credit Card Name</button>
+
+    <h2>Credit Card Names</h2>
+    <ul class="card-name-list" id="cardNameList"></ul>
+    <button id="resetBtn">Reset Spending Entries</button>
+    <div class="entries-container" id="entriesContainer"></div>
+    <button id="printBtn">Print Entries</button>
+    <div id="toast"></div>
+
+    <h2>Set Theme Change Time</h2>
+    <input type="time" id="themeChangeTime" />
+    <button id="setThemeChangeBtn" class="submit-btn">Set Theme Change Time</button>
+  </div>
+
+  <script>
+    const STORAGE_ENTRIES_KEY = 'ccSpendingEntries';
+    const STORAGE_CARDS_KEY = 'ccCardNames';
+    let entries = [];
+    let cardNames = [];
+
+    const entryForm = document.getElementById('entryForm');
+    const entriesContainer = document.getElementById('entriesContainer');
+    const resetBtn = document.getElementById('resetBtn');
+    const cardNameSelect = document.getElementById('cardName');
+    const spendingDateInput = document.getElementById('spendingDate');
+    const descriptionInput = document.getElementById('description');
+    const overallTotalEl = document.getElementById('overallTotal');
+    const printBtn = document.getElementById('printBtn');
+    const cardNameListEl = document.getElementById('cardNameList');
+    const newCardNameInput = document.getElementById('newCardName');
+    const addCardNameBtn = document.getElementById('addCardNameBtn');
+    const themeChangeTimeInput = document.getElementById('themeChangeTime');
+    const setThemeChangeBtn = document.getElementById('setThemeChangeBtn');
+
+    function formatCurrency(value) {
+      return '$' + Number(value).toFixed(2);
+    }
+
+    function setDefaultDate() {
+      spendingDateInput.value = new Date().toISOString().split('T')[0];
+    }
+
+    function showToast(msg, duration = 2500) {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.style.display = 'block';
+      setTimeout(() => {
+        toast.style.display = 'none';
+      }, duration);
+    }
+
+    function saveEntries() {
+      localStorage.setItem(STORAGE_ENTRIES_KEY, JSON.stringify(entries));
+    }
+
+    function loadEntries() {
+      entries = JSON.parse(localStorage.getItem(STORAGE_ENTRIES_KEY) || '[]');
+    }
+
+    function saveCardNames() {
+      localStorage.setItem(STORAGE_CARDS_KEY, JSON.stringify(cardNames));
+    }
+
+    function loadCardNames() {
+      cardNames = JSON.parse(localStorage.getItem(STORAGE_CARDS_KEY) || '[]');
+      updateCardNamesDropdown();
+      updateCardNameListUI();
+    }
+
+    function updateCardNamesDropdown() {
+      cardNameSelect.innerHTML = '<option value="" disabled selected>Select Credit Card Name</option>';
+      cardNames.forEach(name => {
+        const option = document.createElement('option');
+        option.value = name;
+        option.textContent = name;
+        cardNameSelect.appendChild(option);
+      });
+    }
+
+    function updateCardNameListUI() {
+      cardNameListEl.innerHTML = '';
+      cardNames.forEach(name => {
+        const li = document.createElement('li');
+        li.textContent = name;
+        const editBtn = document.createElement('button');
+        editBtn.textContent = '✏️ Edit';
+        editBtn.onclick = () => editCardName(name);
+        const deleteBtn = document.createElement('button');
+        deleteBtn.textContent = '🗑️ Delete';
+        deleteBtn.onclick = () => deleteCardName(name);
+        li.appendChild(editBtn);
+        li.appendChild(deleteBtn);
+        cardNameListEl.appendChild(li);
+      });
+    }
+
+    function updateOverallTotal() {
+      const total = entries.reduce((sum, e) => sum + e.amount, 0);
+      overallTotalEl.textContent = 'Overall Total Spending: ' + formatCurrency(total);
+    }
+
+    function renderEntries() {
+      entriesContainer.innerHTML = '';
+      if (entries.length === 0) {
+        entriesContainer.innerHTML = '<p style="text-align:center;color:gray;">No spending entries yet.</p>';
+        updateOverallTotal();
+        return;
+      }
+
+      // Group entries by card name
+      const groupedEntries = entries.reduce((acc, entry) => {
+        if (!acc[entry.cardName]) {
+          acc[entry.cardName] = [];
+        }
+        acc[entry.cardName].push(entry);
+        return acc;
+      }, {});
+
+      // Render grouped entries
+      for (const cardName in groupedEntries) {
+        const cardEntries = groupedEntries[cardName];
+        const cardDiv = document.createElement('div');
+        cardDiv.innerHTML = `<h3>${cardName}</h3>`;
+        cardEntries.forEach(entry => {
+          const entryDiv = document.createElement('div');
+          entryDiv.className = 'entry';
+          entryDiv.innerHTML = `
+            Amount: <span>${formatCurrency(entry.amount)}</span><br/>
+            Date: <span>${new Date(entry.spendingDate).toLocaleDateString()}</span><br/>
+            ${entry.description ? '<em>' + entry.description + '</em>' : ''}
+            <br/>
+            <button onclick="deleteEntry(${entry.id})">🗑️ Delete</button>
+          `;
+          entryDiv.dataset.id = entry.id;
+          cardDiv.appendChild(entryDiv);
+        });
+        entriesContainer.appendChild(cardDiv);
+      }
+
+      updateOverallTotal();
+    }
+
+    function deleteEntry(id) {
+      const entryEl = [...document.querySelectorAll('.entry')].find(el => +el.dataset.id === id);
+      if (!entryEl) return;
+      if (confirm('Delete this entry?')) {
+        entryEl.classList.add('removed');
+        setTimeout(() => {
+          entries = entries.filter(e => e.id !== id);
+          saveEntries();
+          renderEntries();
+        }, 300);
+      }
+    }
+
+    function editCardName(name) {
+      const newName = prompt('Enter new name for "' + name + '":');
+      if (newName && !cardNames.includes(newName)) {
+        cardNames = cardNames.map(n => n === name ? newName : n);
+        saveCardNames();
+        updateCardNamesDropdown();
+        updateCardNameListUI();
+      } else if (newName) {
+        showToast('This credit card name already exists.');
+      }
+    }
+
+    function deleteCardName(name) {
+      if (confirm('Delete "' + name + '"?')) {
+        cardNames = cardNames.filter(n => n !== name);
+        saveCardNames();
+        updateCardNamesDropdown();
+        updateCardNameListUI();
+      }
+    }
+
+    addCardNameBtn.addEventListener('click', () => {
+      const newCardName = newCardNameInput.value.trim();
+      if (newCardName && !cardNames.includes(newCardName)) {
+        cardNames.push(newCardName);
+        saveCardNames();
+        updateCardNamesDropdown();
+        updateCardNameListUI();
+        newCardNameInput.value = ''; // Clear input field
+      } else if (newCardName) {
+        showToast('This credit card name already exists.');
+      }
+    });
+
+    entryForm.addEventListener('submit', e => {
+      e.preventDefault();
+      const name = cardNameSelect.value;
+      const amount = parseFloat(document.getElementById('amount').value);
+      const date = spendingDateInput.value;
+      const description = descriptionInput.value.trim();
+
+      if (!name || isNaN(amount) || amount <= 0 || !date) {
+        showToast('Please fill all required fields correctly.');
+        return;
+      }
+
+      const newEntry = {
+        id: Date.now(),
+        cardName: name,
+        amount,
+        spendingDate: date,
+        description
+      };
+
+      entries.push(newEntry);
+      saveEntries();
+      renderEntries();
+      entryForm.reset();
+      setDefaultDate();
+    });
+
+    resetBtn.addEventListener('click', () => {
+      if (confirm('Are you sure you want to reset all entries?')) {
+        entries = [];
+        saveEntries();
+        renderEntries();
+      }
+    });
+
+    printBtn.addEventListener('click', () => {
+      let printContent = '<h2>Credit Card Spending Entries</h2><table style="width:100%; border-collapse: collapse;">';
+      printContent += '<tr><th>Card Name</th><th>Amount</th><th>Date</th><th>Description</th></tr>';
+      entries.forEach(entry => {
+        printContent += `
+          <tr>
+            <td>${entry.cardName}</td>
+            <td>${formatCurrency(entry.amount)}</td>
+            <td>${new Date(entry.spendingDate).toLocaleDateString()}</td>
+            <td>${entry.description || ''}</td>
+          </tr>
+        `;
+      });
+      printContent += '</table>';
+      const printWindow = window.open('', '', 'height=400,width=600');
+      printWindow.document.write('<html><head><title>Print</title><style>table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid black; padding: 8px; text-align: left; } th { background-color: #f2f2f2; }</style></head><body>' + printContent + '</body></html>');
+      printWindow.document.close();
+      printWindow.print();
+    });
+
+    function updateTheme() {
+      const currentHour = new Date().getHours();
+      const themeChangeTime = themeChangeTimeInput.value ? parseInt(themeChangeTimeInput.value.split(':')[0]) : null;
+
+      if (themeChangeTime !== null) {
+        if (currentHour >= themeChangeTime) {
+          document.body.classList.add('light-theme');
+        } else {
+          document.body.classList.remove('light-theme');
+        }
+      } else {
+        // Default to light theme during the day (6 AM to 6 PM)
+        if (currentHour >= 6 && currentHour < 18) {
+          document.body.classList.add('light-theme');
+        } else {
+          document.body.classList.remove('light-theme');
+        }
+      }
+    }
+
+    setThemeChangeBtn.addEventListener('click', () => {
+      updateTheme();
+    });
+
+    document.getElementById('themeToggleBtn').addEventListener('click', () => {
+      document.body.classList.toggle('light-theme');
+      localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+    });
+
+    (function init() {
+      const savedTheme = localStorage.getItem('theme');
+      if (savedTheme === 'light') document.body.classList.add('light-theme');
+      loadEntries();
+      loadCardNames();
+      renderEntries();
+      setDefaultDate();
+      updateTheme(); // Set initial theme based on time
+    })();
+  </script>
+</body>
+</html>
+
