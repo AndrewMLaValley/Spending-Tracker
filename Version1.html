@@ -1,505 +1,1015 @@
-<!-- Save as index.html -->
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Deadbeat Credit Card Spending Tracker</title>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#12355b">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <title>Spending Tracker</title>
+
   <style>
-    @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@400;600&display=swap');
+    :root {
+      --navy: #12355b;
+      --blue: #1d73c9;
+      --light-blue: #eaf3ff;
+      --green: #13795b;
+      --red: #b42318;
+      --bg: #f4f7fb;
+      --card: #ffffff;
+      --text: #172033;
+      --muted: #64748b;
+      --border: #d9e1ec;
+      --shadow: 0 5px 20px rgba(24, 48, 80, 0.08);
+    }
+
+    * { box-sizing: border-box; }
 
     body {
-      font-family: 'Poppins', sans-serif;
-      background-color: #000000;
-      color: #ff4c4c;
       margin: 0;
-      padding: 2rem 1rem;
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+      padding-bottom: 90px;
+    }
+
+    button, input, select, textarea { font: inherit; }
+
+    button {
+      cursor: pointer;
+      border: 0;
+      border-radius: 10px;
+      font-weight: 700;
+    }
+
+    .app {
+      width: min(100%, 760px);
+      margin: auto;
       min-height: 100vh;
-      display: flex;
-      justify-content: center;
-      align-items: flex-start;
     }
 
-    body.light-theme {
-      background-color: #f8f8f8;
-      color: #333;
-    }
-
-    .container {
-      background: #100000;
-      width: 95%;
-      max-width: 800px;
-      border-radius: 14px;
-      padding: 2rem 2.5rem 3rem;
-      box-shadow: 0 0 30px #ff0000cc;
-      display: flex;
-      flex-direction: column;
-      gap: 1.5rem;
-      position: relative;
-    }
-
-    body.light-theme .container {
-      background: #fff;
-      box-shadow: 0 0 20px rgba(0,0,0,0.1);
-    }
-
-    h1 {
-      font-weight: 700;
-      font-size: 2.5rem;
-      text-align: center;
-      letter-spacing: 2px;
-      user-select: none;
-      margin-bottom: 1rem;
-      color: inherit;
-    }
-
-    .summary {
-      position: sticky;
-      top: 0;
-      background: #330000;
-      color: #fff;
-      padding: 1.2rem 2rem;
-      font-size: 1.4rem;
-      font-weight: 600;
-      text-align: center;
-      border-radius: 10px;
-      box-shadow: 0 0 10px #ff1a1acc;
-      z-index: 100;
-    }
-
-    body.light-theme .summary {
-      background: #e2e2e2;
-      color: #000;
-      box-shadow: none;
-    }
-
-    form {
-      display: grid;
-      grid-template-columns: repeat(auto-fit,minmax(200px,1fr));
-      gap: 1rem;
-    }
-
-    form input, form textarea, form select {
-      background: #330000;
-      border: none;
-      border-radius: 12px;
-      padding: 1rem;
-      font-size: 1rem;
-      color: #ff8080;
-      font-weight: 600;
-      width: 100%;
-      box-sizing: border-box;
-    }
-
-    body.light-theme form input,
-    body.light-theme form textarea,
-    body.light-theme form select {
-      background: #f9f9f9;
-      color: #333;
-    }
-
-    form button.submit-btn {
-      grid-column: 1 / -1;
-      background-color: #ff1a1a;
+    header {
+      background: var(--navy);
       color: white;
-      border: none;
-      border-radius: 14px;
-      padding: 0.5rem 0; /* Smaller button */
-      font-weight: 700;
-      font-size: 1rem; /* Smaller font size */
-      cursor: pointer;
+      padding: calc(18px + env(safe-area-inset-top)) 18px 18px;
     }
 
-    #resetBtn {
-      background: #330000;
-      color: #ff1a1a;
-      padding: 0.8rem 2rem;
-      font-size: 1rem;
-      font-weight: bold;
-      border-radius: 12px;
-      border: none;
-      cursor: pointer;
-      align-self: center;
-    }
-
-    body.light-theme #resetBtn {
-      background: #f0f0f0;
-      color: #cc0000;
-    }
-
-    #themeToggleBtn {
-      position: absolute;
-      top: 1rem;
-      right: 1rem;
-      background: transparent;
-      border: none;
-      font-size: 1.3rem;
-      cursor: pointer;
-      color: inherit;
-    }
-
-    .entry {
-      background: #440000;
-      padding: 1rem;
-      margin-bottom: 1rem;
-      border-radius: 12px;
-      transition: all 0.3s ease;
-    }
-
-    .entry.removed {
-      opacity: 0;
-      transform: scale(0.95);
-    }
-
-    body.light-theme .entry {
-      background: #f2f2f2;
-      color: #000;
-    }
-
-    /* Toast */
-    #toast {
-      position: fixed;
-      bottom: 1.5rem;
-      left: 50%;
-      transform: translateX(-50%);
-      background: #ff1a1a;
-      color: white;
-      padding: 0.8rem 1.5rem;
-      border-radius: 10px;
-      display: none;
-      z-index: 999;
-      font-weight: 600;
-    }
-
-    /* Card Name List */
-    .card-name-list {
-      list-style: none;
-      padding: 0;
+    header h1 {
       margin: 0;
+      font-size: 1.3rem;
     }
 
-    .card-name-list li {
-      padding: 0.5rem;
-      border-bottom: 1px solid #333;
+    header p {
+      margin: 5px 0 0;
+      color: #cbdcf1;
+      font-size: 0.9rem;
+    }
+
+    main { padding: 16px; }
+
+    .page { display: none; }
+    .page.active { display: block; }
+
+    .total-card {
+      background: linear-gradient(135deg, #12355b, #1d73c9);
+      color: white;
+      padding: 22px;
+      border-radius: 16px;
+      box-shadow: var(--shadow);
+      margin-bottom: 18px;
+    }
+
+    .total-card small {
+      display: block;
+      color: #d9e9ff;
+      margin-bottom: 7px;
+    }
+
+    .total-card strong {
+      font-size: 2rem;
+      letter-spacing: -0.5px;
+    }
+
+    .section-heading {
       display: flex;
       justify-content: space-between;
       align-items: center;
+      margin: 22px 0 10px;
     }
 
-    .card-name-list li:last-child {
-      border-bottom: none;
+    .section-heading h2 {
+      margin: 0;
+      font-size: 1.1rem;
     }
 
-    .card-name-list li button {
+    .link-button {
       background: transparent;
-      border: none;
-      padding: 0.2rem 0.5rem;
-      font-size: 1rem;
-      cursor: pointer;
+      color: var(--blue);
+      padding: 6px 0;
     }
+
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(210px, 1fr));
+      gap: 12px;
+    }
+
+    .credit-card {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      box-shadow: var(--shadow);
+    }
+
+    .credit-card-top,
+    .list-row-top,
+    .list-row-bottom,
+    .toolbar,
+    .modal-title-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .credit-card-name {
+      font-weight: 800;
+      font-size: 1rem;
+    }
+
+    .credit-card-last-four,
+    .subtle,
+    .list-row-bottom,
+    .empty-state p {
+      color: var(--muted);
+      font-size: 0.85rem;
+    }
+
+    .credit-card-total {
+      display: block;
+      font-size: 1.45rem;
+      font-weight: 800;
+      margin-top: 22px;
+    }
+
+    .panel {
+      background: var(--card);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .list-row {
+      width: 100%;
+      padding: 14px 15px;
+      border-bottom: 1px solid var(--border);
+      background: white;
+      text-align: left;
+    }
+
+    .list-row:last-child { border-bottom: none; }
+
+    .merchant {
+      font-weight: 750;
+      display: block;
+    }
+
+    .amount {
+      font-weight: 800;
+      white-space: nowrap;
+    }
+
+    .filter-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-bottom: 14px;
+    }
+
+    .primary,
+    .secondary,
+    .danger {
+      padding: 12px 14px;
+    }
+
+    .primary {
+      color: white;
+      background: var(--blue);
+    }
+
+    .secondary {
+      background: #e8eef6;
+      color: var(--navy);
+    }
+
+    .danger {
+      color: white;
+      background: var(--red);
+    }
+
+    .wide-button {
+      width: 100%;
+      margin-top: 16px;
+    }
+
+    .empty-state {
+      padding: 30px 20px;
+      text-align: center;
+      background: white;
+      border: 1px dashed #b6c4d6;
+      border-radius: 14px;
+    }
+
+    .empty-state h3 { margin: 0 0 8px; }
+    .empty-state p { margin: 0 0 16px; }
+
+    .bottom-nav {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 10;
+      background: white;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: center;
+      padding-bottom: env(safe-area-inset-bottom);
+    }
+
+    .bottom-nav-inner {
+      width: min(100%, 760px);
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+    }
+
+    .nav-button {
+      padding: 13px 8px;
+      background: white;
+      color: var(--muted);
+      border-radius: 0;
+      font-size: 0.8rem;
+    }
+
+    .nav-button.active {
+      color: var(--blue);
+      background: #f2f8ff;
+    }
+
+    .floating-add {
+      position: fixed;
+      right: 20px;
+      bottom: 76px;
+      z-index: 9;
+      width: 58px;
+      height: 58px;
+      border-radius: 50%;
+      color: white;
+      background: var(--blue);
+      box-shadow: 0 7px 18px rgba(29, 115, 201, 0.35);
+      font-size: 1.8rem;
+      line-height: 1;
+    }
+
+    .modal-backdrop {
+      display: none;
+      position: fixed;
+      z-index: 30;
+      inset: 0;
+      background: rgba(15, 23, 42, 0.55);
+      padding: 16px;
+      align-items: flex-end;
+      justify-content: center;
+    }
+
+    .modal-backdrop.show { display: flex; }
+
+    .modal {
+      background: white;
+      width: min(100%, 650px);
+      max-height: min(90vh, 760px);
+      overflow-y: auto;
+      border-radius: 18px 18px 12px 12px;
+      padding: 18px;
+      box-shadow: 0 -5px 30px rgba(0, 0, 0, 0.16);
+    }
+
+    .modal h2 { margin: 0; font-size: 1.2rem; }
+
+    .close-button {
+      width: 36px;
+      height: 36px;
+      background: #e8eef6;
+      color: var(--navy);
+      font-size: 1.2rem;
+      border-radius: 50%;
+    }
+
+    .form-group { margin-top: 15px; }
+
+    label {
+      display: block;
+      font-size: 0.86rem;
+      font-weight: 750;
+      margin-bottom: 6px;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      color: var(--text);
+      padding: 12px;
+      border: 1px solid #bdc9d8;
+      border-radius: 10px;
+      background: white;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 82px;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    .modal-actions button { flex: 1; }
+
+    .receipt-note {
+      margin: 8px 0 0;
+      color: var(--green);
+      font-size: 0.84rem;
+      font-weight: 650;
+    }
+
+    .receipt-warning {
+      margin: 8px 0 0;
+      color: var(--muted);
+      font-size: 0.78rem;
+      line-height: 1.35;
+    }
+
+    .settings-actions {
+      display: grid;
+      gap: 10px;
+    }
+
+    .notice {
+      margin: 14px 0;
+      padding: 12px;
+      background: #fff9e8;
+      border: 1px solid #f3d276;
+      color: #725817;
+      border-radius: 10px;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    }
+
+    .hidden { display: none; }
   </style>
 </head>
+
 <body>
-  <div class="container">
-    <button id="themeToggleBtn">🌙 Toggle Theme</button>
-    <h1>Deadbeat Credit Card Spending Tracker</h1>
-    <div class="summary" id="overallTotal">Overall Total Spending: $0.00</div>
+  <div class="app">
+    <header>
+      <h1>Credit Card Spending Tracker</h1>
+      <p>Local-only personal expense tracking</p>
+    </header>
 
-    <form id="entryForm" autocomplete="off">
-      <select id="cardName" required>
-        <option value="" disabled selected>Select Credit Card Name</option>
-      </select>
-      <input type="number" id="amount" placeholder="Amount ($)" required min="0.01" step="0.01" />
-      <input type="date" id="spendingDate" placeholder="Date of Spending" required />
-      <textarea id="description" placeholder="Spending Description (optional)" maxlength="200"></textarea>
-      <button type="submit" class="submit-btn">Add Spending</button>
-    </form>
+    <main>
+      <!-- DASHBOARD -->
+      <section id="dashboardPage" class="page active">
+        <div class="total-card">
+          <small>Total Tracked Spending</small>
+          <strong id="grandTotal">$0.00</strong>
+        </div>
 
-    <h2>Add New Credit Card Name</h2>
-    <input type="text" id="newCardName" placeholder="New Credit Card Name" />
-    <button id="addCardNameBtn" class="submit-btn">Add Credit Card Name</button>
+        <div class="section-heading">
+          <h2>Credit Cards</h2>
+          <button class="link-button" onclick="showPage('cards')">View all</button>
+        </div>
+        <div id="dashboardCards" class="card-grid"></div>
 
-    <h2>Credit Card Names</h2>
-    <ul class="card-name-list" id="cardNameList"></ul>
-    <button id="resetBtn">Reset Spending Entries</button>
-    <div class="entries-container" id="entriesContainer"></div>
-    <button id="printBtn">Print Entries</button>
-    <div id="toast"></div>
+        <div class="section-heading">
+          <h2>Recent Expenses</h2>
+          <button class="link-button" onclick="showPage('expenses')">View all</button>
+        </div>
+        <div id="recentExpenses" class="panel"></div>
+      </section>
 
-    <h2>Set Theme Change Time</h2>
-    <input type="time" id="themeChangeTime" />
-    <button id="setThemeChangeBtn" class="submit-btn">Set Theme Change Time</button>
+      <!-- EXPENSES -->
+      <section id="expensesPage" class="page">
+        <div class="section-heading">
+          <h2>Expenses</h2>
+          <button class="primary" onclick="openExpenseModal()">+ Add Expense</button>
+        </div>
+
+        <div class="filter-row">
+          <input id="searchInput" type="search" placeholder="Search merchant or category" oninput="renderExpenses()">
+          <select id="cardFilter" onchange="renderExpenses()"></select>
+        </div>
+
+        <div id="expensesList" class="panel"></div>
+      </section>
+
+      <!-- CARDS -->
+      <section id="cardsPage" class="page">
+        <div class="section-heading">
+          <h2>Credit Cards</h2>
+          <button class="primary" onclick="openCardModal()">+ Add Card</button>
+        </div>
+        <div id="cardsList" class="card-grid"></div>
+
+        <div class="section-heading">
+          <h2>Data Backup</h2>
+        </div>
+
+        <div class="panel" style="padding: 15px;">
+          <p class="subtle">
+            Export a backup before clearing browser data or changing phones.
+            Imported data replaces current tracker data.
+          </p>
+
+          <div class="settings-actions">
+            <button class="secondary" onclick="exportBackup()">Export Backup</button>
+            <button class="secondary" onclick="document.getElementById('importFile').click()">Import Backup</button>
+            <input id="importFile" class="hidden" type="file" accept="application/json" onchange="importBackup(event)">
+            <button class="danger" onclick="clearAllData()">Delete All Local Data</button>
+          </div>
+        </div>
+      </section>
+    </main>
+  </div>
+
+  <button class="floating-add" aria-label="Add expense" onclick="openExpenseModal()">+</button>
+
+  <nav class="bottom-nav">
+    <div class="bottom-nav-inner">
+      <button id="dashboardNav" class="nav-button active" onclick="showPage('dashboard')">Dashboard</button>
+      <button id="expensesNav" class="nav-button" onclick="showPage('expenses')">Expenses</button>
+      <button id="cardsNav" class="nav-button" onclick="showPage('cards')">Cards</button>
+    </div>
+  </nav>
+
+  <!-- EXPENSE MODAL -->
+  <div id="expenseModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-title-row">
+        <h2 id="expenseModalTitle">Add Expense</h2>
+        <button class="close-button" onclick="closeExpenseModal()" aria-label="Close">×</button>
+      </div>
+
+      <form id="expenseForm" onsubmit="saveExpense(event)">
+        <input type="hidden" id="expenseId">
+
+        <div class="form-group">
+          <label for="expenseCard">Credit Card</label>
+          <select id="expenseCard" required></select>
+        </div>
+
+        <div class="form-group">
+          <label for="merchant">Merchant</label>
+          <input id="merchant" type="text" placeholder="Example: Grocery Store" required>
+        </div>
+
+        <div class="form-group">
+          <label for="amount">Amount</label>
+          <input id="amount" type="number" inputmode="decimal" min="0.01" step="0.01" placeholder="0.00" required>
+        </div>
+
+        <div class="form-group">
+          <label for="expenseDate">Purchase Date</label>
+          <input id="expenseDate" type="date" required>
+        </div>
+
+        <div class="form-group">
+          <label for="category">Category</label>
+          <select id="category">
+            <option>Dining</option>
+            <option>Groceries</option>
+            <option>Gas</option>
+            <option>Travel</option>
+            <option>Shopping</option>
+            <option>Entertainment</option>
+            <option>Utilities</option>
+            <option>Health</option>
+            <option selected>Other</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label for="notes">Notes</label>
+          <textarea id="notes" placeholder="Optional notes"></textarea>
+        </div>
+
+        <div class="form-group">
+          <label for="receiptPhoto">Receipt Photo</label>
+          <input id="receiptPhoto" type="file" accept="image/*" capture="environment" onchange="receiptSelected()">
+          <p id="receiptStatus" class="receipt-note"></p>
+          <p class="receipt-warning">
+            Receipt photo selection is supported, but this local web version does not automatically read receipt text.
+            A receipt image is not uploaded to GitHub or any bank.
+          </p>
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="secondary" onclick="closeExpenseModal()">Cancel</button>
+          <button type="submit" class="primary">Save Expense</button>
+        </div>
+
+        <button id="deleteExpenseButton" type="button" class="danger wide-button hidden" onclick="deleteCurrentExpense()">
+          Delete Expense
+        </button>
+      </form>
+    </div>
+  </div>
+
+  <!-- CARD MODAL -->
+  <div id="cardModalBackdrop" class="modal-backdrop">
+    <div class="modal">
+      <div class="modal-title-row">
+        <h2 id="cardModalTitle">Add Credit Card</h2>
+        <button class="close-button" onclick="closeCardModal()" aria-label="Close">×</button>
+      </div>
+
+      <form id="cardForm" onsubmit="saveCard(event)">
+        <input type="hidden" id="cardId">
+
+        <div class="form-group">
+          <label for="cardName">Card Name</label>
+          <input id="cardName" type="text" placeholder="Example: Chase Sapphire" required>
+        </div>
+
+        <div class="form-group">
+          <label for="lastFour">Last Four Digits (optional)</label>
+          <input id="lastFour" type="text" inputmode="numeric" maxlength="4" placeholder="1234">
+        </div>
+
+        <div class="notice">
+          Enter only a nickname and optional last four digits. Do not enter a full card number, CVV, bank password, or account number.
+        </div>
+
+        <div class="modal-actions">
+          <button type="button" class="secondary" onclick="closeCardModal()">Cancel</button>
+          <button type="submit" class="primary">Save Card</button>
+        </div>
+
+        <button id="deleteCardButton" type="button" class="danger wide-button hidden" onclick="deleteCurrentCard()">
+          Delete Card and Associated Expenses
+        </button>
+      </form>
+    </div>
   </div>
 
   <script>
-    const STORAGE_ENTRIES_KEY = 'ccSpendingEntries';
-    const STORAGE_CARDS_KEY = 'ccCardNames';
-    let entries = [];
-    let cardNames = [];
+    const STORAGE_KEY = "creditCardSpendingTrackerV1";
 
-    const entryForm = document.getElementById('entryForm');
-    const entriesContainer = document.getElementById('entriesContainer');
-    const resetBtn = document.getElementById('resetBtn');
-    const cardNameSelect = document.getElementById('cardName');
-    const spendingDateInput = document.getElementById('spendingDate');
-    const descriptionInput = document.getElementById('description');
-    const overallTotalEl = document.getElementById('overallTotal');
-    const printBtn = document.getElementById('printBtn');
-    const cardNameListEl = document.getElementById('cardNameList');
-    const newCardNameInput = document.getElementById('newCardName');
-    const addCardNameBtn = document.getElementById('addCardNameBtn');
-    const themeChangeTimeInput = document.getElementById('themeChangeTime');
-    const setThemeChangeBtn = document.getElementById('setThemeChangeBtn');
+    let state = {
+      cards: [],
+      expenses: []
+    };
 
-    function formatCurrency(value) {
-      return '$' + Number(value).toFixed(2);
-    }
-
-    function setDefaultDate() {
-      spendingDateInput.value = new Date().toISOString().split('T')[0];
-    }
-
-    function showToast(msg, duration = 2500) {
-      const toast = document.getElementById('toast');
-      toast.textContent = msg;
-      toast.style.display = 'block';
-      setTimeout(() => {
-        toast.style.display = 'none';
-      }, duration);
-    }
-
-    function saveEntries() {
-      localStorage.setItem(STORAGE_ENTRIES_KEY, JSON.stringify(entries));
-    }
-
-    function loadEntries() {
-      entries = JSON.parse(localStorage.getItem(STORAGE_ENTRIES_KEY) || '[]');
-    }
-
-    function saveCardNames() {
-      localStorage.setItem(STORAGE_CARDS_KEY, JSON.stringify(cardNames));
-    }
-
-    function loadCardNames() {
-      cardNames = JSON.parse(localStorage.getItem(STORAGE_CARDS_KEY) || '[]');
-      updateCardNamesDropdown();
-      updateCardNameListUI();
-    }
-
-    function updateCardNamesDropdown() {
-      cardNameSelect.innerHTML = '<option value="" disabled selected>Select Credit Card Name</option>';
-      cardNames.forEach(name => {
-        const option = document.createElement('option');
-        option.value = name;
-        option.textContent = name;
-        cardNameSelect.appendChild(option);
-      });
-    }
-
-    function updateCardNameListUI() {
-      cardNameListEl.innerHTML = '';
-      cardNames.forEach(name => {
-        const li = document.createElement('li');
-        li.textContent = name;
-        const editBtn = document.createElement('button');
-        editBtn.textContent = '✏️ Edit';
-        editBtn.onclick = () => editCardName(name);
-        const deleteBtn = document.createElement('button');
-        deleteBtn.textContent = '🗑️ Delete';
-        deleteBtn.onclick = () => deleteCardName(name);
-        li.appendChild(editBtn);
-        li.appendChild(deleteBtn);
-        cardNameListEl.appendChild(li);
-      });
-    }
-
-    function updateOverallTotal() {
-      const total = entries.reduce((sum, e) => sum + e.amount, 0);
-      overallTotalEl.textContent = 'Overall Total Spending: ' + formatCurrency(total);
-    }
-
-    function renderEntries() {
-      entriesContainer.innerHTML = '';
-      if (entries.length === 0) {
-        entriesContainer.innerHTML = '<p style="text-align:center;color:gray;">No spending entries yet.</p>';
-        updateOverallTotal();
-        return;
-      }
-
-      // Group entries by card name
-      const groupedEntries = entries.reduce((acc, entry) => {
-        if (!acc[entry.cardName]) {
-          acc[entry.cardName] = [];
+    function loadState() {
+      try {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+          const parsed = JSON.parse(stored);
+          state.cards = Array.isArray(parsed.cards) ? parsed.cards : [];
+          state.expenses = Array.isArray(parsed.expenses) ? parsed.expenses : [];
         }
-        acc[entry.cardName].push(entry);
-        return acc;
-      }, {});
-
-      // Render grouped entries
-      for (const cardName in groupedEntries) {
-        const cardEntries = groupedEntries[cardName];
-        const cardDiv = document.createElement('div');
-        cardDiv.innerHTML = `<h3>${cardName}</h3>`;
-        cardEntries.forEach(entry => {
-          const entryDiv = document.createElement('div');
-          entryDiv.className = 'entry';
-          entryDiv.innerHTML = `
-            Amount: <span>${formatCurrency(entry.amount)}</span><br/>
-            Date: <span>${new Date(entry.spendingDate).toLocaleDateString()}</span><br/>
-            ${entry.description ? '<em>' + entry.description + '</em>' : ''}
-            <br/>
-            <button onclick="deleteEntry(${entry.id})">🗑️ Delete</button>
-          `;
-          entryDiv.dataset.id = entry.id;
-          cardDiv.appendChild(entryDiv);
-        });
-        entriesContainer.appendChild(cardDiv);
-      }
-
-      updateOverallTotal();
-    }
-
-    function deleteEntry(id) {
-      const entryEl = [...document.querySelectorAll('.entry')].find(el => +el.dataset.id === id);
-      if (!entryEl) return;
-      if (confirm('Delete this entry?')) {
-        entryEl.classList.add('removed');
-        setTimeout(() => {
-          entries = entries.filter(e => e.id !== id);
-          saveEntries();
-          renderEntries();
-        }, 300);
+      } catch (error) {
+        console.error("Unable to load saved tracker data.", error);
       }
     }
 
-    function editCardName(name) {
-      const newName = prompt('Enter new name for "' + name + '":');
-      if (newName && !cardNames.includes(newName)) {
-        cardNames = cardNames.map(n => n === name ? newName : n);
-        saveCardNames();
-        updateCardNamesDropdown();
-        updateCardNameListUI();
-      } else if (newName) {
-        showToast('This credit card name already exists.');
+    function saveState() {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+    }
+
+    function id() {
+      return `${Date.now()}-${Math.random().toString(16).slice(2)}`;
+    }
+
+    function today() {
+      return new Date().toISOString().slice(0, 10);
+    }
+
+    function money(value) {
+      return new Intl.NumberFormat("en-US", {
+        style: "currency",
+        currency: "USD"
+      }).format(Number(value || 0));
+    }
+
+    function escapeHTML(value) {
+      return String(value ?? "")
+        .replaceAll("&", "&amp;")
+        .replaceAll("<", "&lt;")
+        .replaceAll(">", "&gt;")
+        .replaceAll('"', "&quot;")
+        .replaceAll("'", "&#039;");
+    }
+
+    function formatDate(value) {
+      if (!value) return "";
+      const [year, month, day] = value.split("-").map(Number);
+      return new Intl.DateTimeFormat("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric"
+      }).format(new Date(year, month - 1, day));
+    }
+
+    function cardName(cardId) {
+      const card = state.cards.find(card => card.id === cardId);
+      if (!card) return "Unknown Card";
+      return card.lastFour ? `${card.name} •••• ${card.lastFour}` : card.name;
+    }
+
+    function cardTotal(cardId) {
+      return state.expenses
+        .filter(expense => expense.cardId === cardId)
+        .reduce((sum, expense) => sum + Number(expense.amount), 0);
+    }
+
+    function grandTotal() {
+      return state.expenses.reduce((sum, expense) => sum + Number(expense.amount), 0);
+    }
+
+    function showPage(pageName) {
+      ["dashboard", "expenses", "cards"].forEach(name => {
+        document.getElementById(`${name}Page`).classList.toggle("active", name === pageName);
+        document.getElementById(`${name}Nav`).classList.toggle("active", name === pageName);
+      });
+
+      if (pageName === "expenses") renderExpenses();
+      if (pageName === "cards") renderCards();
+      if (pageName === "dashboard") renderDashboard();
+    }
+
+    function renderDashboard() {
+      document.getElementById("grandTotal").textContent = money(grandTotal());
+
+      const cardsContainer = document.getElementById("dashboardCards");
+      if (state.cards.length === 0) {
+        cardsContainer.innerHTML = `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <h3>No credit cards yet</h3>
+            <p>Add a card before tracking expenses.</p>
+            <button class="primary" onclick="openCardModal()">Add Your First Card</button>
+          </div>
+        `;
+      } else {
+        cardsContainer.innerHTML = state.cards.slice(0, 4).map(card => `
+          <button class="credit-card" onclick="openCardModal('${card.id}')" aria-label="Edit ${escapeHTML(card.name)}">
+            <div class="credit-card-top">
+              <span class="credit-card-name">${escapeHTML(card.name)}</span>
+              <span>💳</span>
+            </div>
+            <div class="credit-card-last-four">
+              ${card.lastFour ? `•••• ${escapeHTML(card.lastFour)}` : "Manual card"}
+            </div>
+            <strong class="credit-card-total">${money(cardTotal(card.id))}</strong>
+          </button>
+        `).join("");
+      }
+
+      const recent = [...state.expenses]
+        .sort((a, b) => b.date.localeCompare(a.date))
+        .slice(0, 5);
+
+      const recentContainer = document.getElementById("recentExpenses");
+      if (recent.length === 0) {
+        recentContainer.innerHTML = `
+          <div class="empty-state">
+            <h3>No expenses yet</h3>
+            <p>Add your first expenditure to begin tracking.</p>
+            <button class="primary" onclick="openExpenseModal()">Add Expense</button>
+          </div>
+        `;
+      } else {
+        recentContainer.innerHTML = recent.map(expenseRowHTML).join("");
       }
     }
 
-    function deleteCardName(name) {
-      if (confirm('Delete "' + name + '"?')) {
-        cardNames = cardNames.filter(n => n !== name);
-        saveCardNames();
-        updateCardNamesDropdown();
-        updateCardNameListUI();
-      }
+    function expenseRowHTML(expense) {
+      return `
+        <button class="list-row" onclick="openExpenseModal('${expense.id}')">
+          <div class="list-row-top">
+            <span class="merchant">${escapeHTML(expense.merchant)}</span>
+            <span class="amount">${money(expense.amount)}</span>
+          </div>
+          <div class="list-row-bottom">
+            <span>${escapeHTML(expense.category)} · ${formatDate(expense.date)}</span>
+            <span>${escapeHTML(cardName(expense.cardId))}</span>
+          </div>
+        </button>
+      `;
     }
 
-    addCardNameBtn.addEventListener('click', () => {
-      const newCardName = newCardNameInput.value.trim();
-      if (newCardName && !cardNames.includes(newCardName)) {
-        cardNames.push(newCardName);
-        saveCardNames();
-        updateCardNamesDropdown();
-        updateCardNameListUI();
-        newCardNameInput.value = ''; // Clear input field
-      } else if (newCardName) {
-        showToast('This credit card name already exists.');
-      }
-    });
+    function renderExpenses() {
+      const filter = document.getElementById("cardFilter");
+      const currentValue = filter.value || "all";
 
-    entryForm.addEventListener('submit', e => {
-      e.preventDefault();
-      const name = cardNameSelect.value;
-      const amount = parseFloat(document.getElementById('amount').value);
-      const date = spendingDateInput.value;
-      const description = descriptionInput.value.trim();
+      filter.innerHTML = `
+        <option value="all">All Cards</option>
+        ${state.cards.map(card => `
+          <option value="${card.id}">${escapeHTML(cardName(card.id))}</option>
+        `).join("")}
+      `;
 
-      if (!name || isNaN(amount) || amount <= 0 || !date) {
-        showToast('Please fill all required fields correctly.');
+      filter.value = currentValue;
+      if (!filter.value) filter.value = "all";
+
+      const search = document.getElementById("searchInput").value.trim().toLowerCase();
+      const cardFilter = filter.value;
+
+      const filtered = state.expenses
+        .filter(expense => {
+          const text = `${expense.merchant} ${expense.category} ${expense.notes || ""}`.toLowerCase();
+          return (cardFilter === "all" || expense.cardId === cardFilter) &&
+                 (!search || text.includes(search));
+        })
+        .sort((a, b) => b.date.localeCompare(a.date));
+
+      const list = document.getElementById("expensesList");
+      list.innerHTML = filtered.length
+        ? filtered.map(expenseRowHTML).join("")
+        : `
+          <div class="empty-state">
+            <h3>No matching expenses</h3>
+            <p>Add an expense or change the current search/filter.</p>
+          </div>
+        `;
+    }
+
+    function renderCards() {
+      const container = document.getElementById("cardsList");
+
+      container.innerHTML = state.cards.length
+        ? state.cards.map(card => `
+          <button class="credit-card" onclick="openCardModal('${card.id}')">
+            <div class="credit-card-top">
+              <span class="credit-card-name">${escapeHTML(card.name)}</span>
+              <span>✎</span>
+            </div>
+            <div class="credit-card-last-four">
+              ${card.lastFour ? `•••• ${escapeHTML(card.lastFour)}` : "No last four digits saved"}
+            </div>
+            <strong class="credit-card-total">${money(cardTotal(card.id))}</strong>
+            <div class="subtle" style="margin-top: 4px;">Tracked total</div>
+          </button>
+        `).join("")
+        : `
+          <div class="empty-state" style="grid-column: 1 / -1;">
+            <h3>No cards saved</h3>
+            <p>Add a card to begin tracking spending.</p>
+          </div>
+        `;
+    }
+
+    function populateCardSelect(selectedId = "") {
+      const select = document.getElementById("expenseCard");
+
+      select.innerHTML = state.cards.length
+        ? state.cards.map(card => `
+          <option value="${card.id}">${escapeHTML(cardName(card.id))}</option>
+        `).join("")
+        : `<option value="">No cards available</option>`;
+
+      if (selectedId) select.value = selectedId;
+    }
+
+    function openExpenseModal(expenseId = "") {
+      if (state.cards.length === 0) {
+        alert("Add a credit card before entering an expense.");
+        openCardModal();
         return;
       }
 
-      const newEntry = {
-        id: Date.now(),
-        cardName: name,
-        amount,
-        spendingDate: date,
-        description
+      const form = document.getElementById("expenseForm");
+      form.reset();
+
+      document.getElementById("expenseId").value = "";
+      document.getElementById("expenseDate").value = today();
+      document.getElementById("expenseModalTitle").textContent = "Add Expense";
+      document.getElementById("deleteExpenseButton").classList.add("hidden");
+      document.getElementById("receiptStatus").textContent = "";
+      populateCardSelect();
+
+      if (expenseId) {
+        const expense = state.expenses.find(item => item.id === expenseId);
+        if (!expense) return;
+
+        document.getElementById("expenseModalTitle").textContent = "Edit Expense";
+        document.getElementById("expenseId").value = expense.id;
+        populateCardSelect(expense.cardId);
+        document.getElementById("merchant").value = expense.merchant;
+        document.getElementById("amount").value = expense.amount;
+        document.getElementById("expenseDate").value = expense.date;
+        document.getElementById("category").value = expense.category;
+        document.getElementById("notes").value = expense.notes || "";
+        document.getElementById("receiptStatus").textContent =
+          expense.receiptName ? `Receipt attached: ${expense.receiptName}` : "";
+        document.getElementById("deleteExpenseButton").classList.remove("hidden");
+      }
+
+      document.getElementById("expenseModalBackdrop").classList.add("show");
+    }
+
+    function closeExpenseModal() {
+      document.getElementById("expenseModalBackdrop").classList.remove("show");
+    }
+
+    function receiptSelected() {
+      const file = document.getElementById("receiptPhoto").files[0];
+      document.getElementById("receiptStatus").textContent =
+        file ? `Receipt selected: ${file.name}` : "";
+    }
+
+    function saveExpense(event) {
+      event.preventDefault();
+
+      const expenseId = document.getElementById("expenseId").value;
+      const existing = state.expenses.find(item => item.id === expenseId);
+      const receiptFile = document.getElementById("receiptPhoto").files[0];
+
+      const expense = {
+        id: expenseId || id(),
+        cardId: document.getElementById("expenseCard").value,
+        merchant: document.getElementById("merchant").value.trim(),
+        amount: Number(document.getElementById("amount").value).toFixed(2),
+        date: document.getElementById("expenseDate").value,
+        category: document.getElementById("category").value,
+        notes: document.getElementById("notes").value.trim(),
+        receiptName: receiptFile ? receiptFile.name : (existing?.receiptName || ""),
+        updatedAt: new Date().toISOString()
       };
 
-      entries.push(newEntry);
-      saveEntries();
-      renderEntries();
-      entryForm.reset();
-      setDefaultDate();
-    });
-
-    resetBtn.addEventListener('click', () => {
-      if (confirm('Are you sure you want to reset all entries?')) {
-        entries = [];
-        saveEntries();
-        renderEntries();
-      }
-    });
-
-    printBtn.addEventListener('click', () => {
-      let printContent = '<h2>Credit Card Spending Entries</h2><table style="width:100%; border-collapse: collapse;">';
-      printContent += '<tr><th>Card Name</th><th>Amount</th><th>Date</th><th>Description</th></tr>';
-      entries.forEach(entry => {
-        printContent += `
-          <tr>
-            <td>${entry.cardName}</td>
-            <td>${formatCurrency(entry.amount)}</td>
-            <td>${new Date(entry.spendingDate).toLocaleDateString()}</td>
-            <td>${entry.description || ''}</td>
-          </tr>
-        `;
-      });
-      printContent += '</table>';
-      const printWindow = window.open('', '', 'height=400,width=600');
-      printWindow.document.write('<html><head><title>Print</title><style>table { width: 100%; border-collapse: collapse; } th, td { border: 1px solid black; padding: 8px; text-align: left; } th { background-color: #f2f2f2; }</style></head><body>' + printContent + '</body></html>');
-      printWindow.document.close();
-      printWindow.print();
-    });
-
-    function updateTheme() {
-      const currentHour = new Date().getHours();
-      const themeChangeTime = themeChangeTimeInput.value ? parseInt(themeChangeTimeInput.value.split(':')[0]) : null;
-
-      if (themeChangeTime !== null) {
-        if (currentHour >= themeChangeTime) {
-          document.body.classList.add('light-theme');
-        } else {
-          document.body.classList.remove('light-theme');
-        }
+      if (existing) {
+        Object.assign(existing, expense);
       } else {
-        // Default to light theme during the day (6 AM to 6 PM)
-        if (currentHour >= 6 && currentHour < 18) {
-          document.body.classList.add('light-theme');
-        } else {
-          document.body.classList.remove('light-theme');
-        }
+        state.expenses.push(expense);
+      }
+
+      saveState();
+      closeExpenseModal();
+      renderAll();
+    }
+
+    function deleteCurrentExpense() {
+      const expenseId = document.getElementById("expenseId").value;
+      if (!expenseId) return;
+
+      if (confirm("Delete this expense?")) {
+        state.expenses = state.expenses.filter(expense => expense.id !== expenseId);
+        saveState();
+        closeExpenseModal();
+        renderAll();
       }
     }
 
-    setThemeChangeBtn.addEventListener('click', () => {
-      updateTheme();
+    function openCardModal(cardId = "") {
+      const form = document.getElementById("cardForm");
+      form.reset();
+
+      document.getElementById("cardId").value = "";
+      document.getElementById("cardModalTitle").textContent = "Add Credit Card";
+      document.getElementById("deleteCardButton").classList.add("hidden");
+
+      if (cardId) {
+        const card = state.cards.find(item => item.id === cardId);
+        if (!card) return;
+
+        document.getElementById("cardId").value = card.id;
+        document.getElementById("cardName").value = card.name;
+        document.getElementById("lastFour").value = card.lastFour || "";
+        document.getElementById("cardModalTitle").textContent = "Edit Credit Card";
+        document.getElementById("deleteCardButton").classList.remove("hidden");
+      }
+
+      document.getElementById("cardModalBackdrop").classList.add("show");
+    }
+
+    function closeCardModal() {
+      document.getElementById("cardModalBackdrop").classList.remove("show");
+    }
+
+    function saveCard(event) {
+      event.preventDefault();
+
+      const cardId = document.getElementById("cardId").value;
+      const lastFour = document.getElementById("lastFour").value.replace(/\D/g, "").slice(0, 4);
+
+      const card = {
+        id: cardId || id(),
+        name: document.getElementById("cardName").value.trim(),
+        lastFour: lastFour
+      };
+
+      const existing = state.cards.find(item => item.id === cardId);
+      if (existing) {
+        Object.assign(existing, card);
+      } else {
+        state.cards.push(card);
+      }
+
+      saveState();
+      closeCardModal();
+      renderAll();
+    }
+
+    function deleteCurrentCard() {
+      const cardId = document.getElementById("cardId").value;
+      const cardExpenses = state.expenses.filter(expense => expense.cardId === cardId).length;
+
+      const message = cardExpenses
+        ? `Delete this card and its ${cardExpenses} associated expense(s)?`
+        : "Delete this card?";
+
+      if (cardId && confirm(message)) {
+        state.cards = state.cards.filter(card => card.id !== cardId);
+        state.expenses = state.expenses.filter(expense => expense.cardId !== cardId);
+        saveState();
+        closeCardModal();
+        renderAll();
+      }
+    }
+
+    function exportBackup() {
+      const backup = {
+        app: "Credit Card Spending Tracker",
+        exportedAt: new Date().toISOString(),
+        cards: state.cards,
+        expenses: state.expenses
+      };
+
+      const file = new Blob([JSON.stringify(backup, null, 2)], {
+        type: "application/json"
+      });
+
+      const link = document.createElement("a");
+      link.href = URL.createObjectURL(file);
+      link.download = `spending-tracker-backup-${today()}.json`;
+      link.click();
+      URL.revokeObjectURL(link.href);
+    }
+
+    function importBackup(event) {
+      const file = event.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function() {
+        try {
+          const imported = JSON.parse(reader.result);
+
+          if (!Array.isArray(imported.cards) || !Array.isArray(imported.expenses)) {
+            throw new Error("Invalid backup format.");
+          }
+
+          if (confirm("Importing will replace all current tracker data. Continue?")) {
+            state.cards = imported.cards;
+            state.expenses = imported.expenses;
+            saveState();
+            renderAll();
+            alert("Backup imported successfully.");
+          }
+        } catch (error) {
+          alert("The selected file is not a valid tracker backup.");
+        }
+      };
+
+      reader.readAsText(file);
+      event.target.value = "";
+    }
+
+    function clearAllData() {
+      if (confirm("Delete all cards and expenses stored in this browser? This cannot be undone unless you exported a backup.")) {
+        state = { cards: [], expenses: [] };
+        saveState();
+        renderAll();
+      }
+    }
+
+    function renderAll() {
+      renderDashboard();
+      renderExpenses();
+      renderCards();
+    }
+
+    document.querySelectorAll(".modal-backdrop").forEach(backdrop => {
+      backdrop.addEventListener("click", function(event) {
+        if (event.target === backdrop) {
+          backdrop.classList.remove("show");
+        }
+      });
     });
 
-    document.getElementById('themeToggleBtn').addEventListener('click', () => {
-      document.body.classList.toggle('light-theme');
-      localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
-    });
-
-    (function init() {
-      const savedTheme = localStorage.getItem('theme');
-      if (savedTheme === 'light') document.body.classList.add('light-theme');
-      loadEntries();
-      loadCardNames();
-      renderEntries();
-      setDefaultDate();
-      updateTheme(); // Set initial theme based on time
-    })();
+    loadState();
+    renderAll();
   </script>
 </body>
 </html>
-
